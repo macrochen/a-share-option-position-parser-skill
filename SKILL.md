@@ -17,7 +17,7 @@ description: 将给定的A股期权持仓明细表截图进行OCR解析，结构
 必须提取并清洗以下字段（请根据截图内容准确映射）：
 - `underlying`: 持仓标的（例如：“创业板ETF”、“500ETF”等，从合约名称中剔除“购”、“沽”及后续部分）
 - `expiry_date`: 到期时间（例如：“2026-12-23”，如果是 YYYY-MM-DD 格式直接提取）
-- `option_type`: 期权类型（识别合约名称中的“购”或“沽”，分别映射为 `"call"` 或 `"put"`）
+- `option_type`: 期权类型（识别合约名称中的“购”或“沽”，分别映射为 `"CALL"` 或 `"PUT"`）
 - `strike_price`: 行权价（提取合约名称中的行权价数值，例如：4600、9500）
 - `current_price`: 现价（浮点数）
 - `open_price`: 买入价/开仓价（浮点数）
@@ -44,7 +44,7 @@ JSON 格式示例：
   {
     "underlying": "创业板ETF",
     "expiry_date": "2026-12-23",
-    "option_type": "call",
+    "option_type": "CALL",
     "strike_price": 4600,
     "current_price": 0.2598,
     "open_price": 0.2676,
@@ -54,5 +54,22 @@ JSON 格式示例：
 ]
 ```
 
-## 3. 回复用户
-保存 JSON 文件后，用 1-2 句话向用户总结说明“截图数据已成功解析，并结构化保存至指定的 JSON 文件中”，给出文件的具体路径。为了给用户直观反馈，可以顺便报一下识别到的持仓总条数或计算一下总体浮动盈亏，而无需输出每一行的明细数据。
+## 3. 自动导入到系统 (可选配置)
+请检查本 Skill 目录下（`~/.gemini/config/skills/a-share-option-position-parser-skill/config.json`）的配置文件：
+- 如果存在该文件且配置了 `api_import_url`（如 `"api_import_url": "http://127.0.0.1:5001/api/a_etf_option_positions/import"`），则必须使用 `curl` 工具（或 Python 脚本）将这份 JSON 数组数据自动推送到该接口完成导入：
+  - **请求方法**: `POST`
+  - **请求头**: `Content-Type: application/json`
+  - **请求体**: 刚刚生成的完整 JSON 数组数据
+- 如果**不存在**该文件或未配置 `api_import_url`，则**跳过此导入步骤**。
+
+**示例命令（如果已配置）**：
+```bash
+curl -X POST <读取到的_api_import_url> \
+-H "Content-Type: application/json" \
+-d @/绝对路径/到/你的/position_data.json
+```
+
+## 4. 回复用户
+保存 JSON 文件后，用 1-2 句话向用户总结说明“截图数据已成功解析（保存至 xxx.json）”。
+如果执行了 API 导入步骤，请一并告知导入结果（成功或失败的原因及条数）。如果未配置导入接口而跳过了，则无需提及导入。
+顺便报一下计算得出的总体浮动盈亏。
