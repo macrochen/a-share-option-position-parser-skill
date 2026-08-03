@@ -66,7 +66,7 @@ JSON 格式示例：
 
 ## 3. 自动导入到系统 (可选配置)
 请检查本 Skill 目录下（`~/.gemini/config/skills/a-share-option-position-parser-skill/config.json`）的配置文件：
-- 如果存在该文件且配置了 `api_import_url`（如 `"api_import_url": "http://127.0.0.1:5001/api/a_etf_option_positions/import"`），则必须使用 `curl` 工具（或 Python 脚本）将这份 JSON 数组数据自动推送到该接口完成导入：
+- 如果存在该文件且配置了 `api_import_url`（如 `"api_import_url": "http://127.0.0.1:5001/api/a_etf_option_positions/import"`），则必须使用 `curl` 工具将这份 JSON 数组数据自动推送到该接口完成导入。**极其重要**：由于默认的命令执行处于沙盒中无法访问网络，在调用 `run_command` 执行该 `curl` 请求时，**必须显式设置参数 `BypassSandbox: true`**（非沙盒模式），以便顺利连接到本地或远程的 API 接口：
   - **请求方法**: `POST`
   - **请求头**: `Content-Type: application/json`
   - **请求体**: 刚刚生成的完整 JSON 数组数据
